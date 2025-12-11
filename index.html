@@ -4,7 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wuhu Menü</title>
+
     <style>
+        :root {
+            --spin-speed: 8s;
+        }
+
         body {
             margin: 0;
             background: #ffffff;
@@ -13,15 +18,129 @@
             flex-direction: column;
             align-items: center;
         }
+
         .menu-image {
             width: 100%;
             max-width: 900px;
             margin-bottom: 20px;
             border-radius: 10px;
         }
+
+        /* --- SPLASH EKRANI --- */
+        #splash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #090909;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 99999;
+            transition: opacity 1s ease; /* Kapanış süresini biraz yumuşattım */
+            overflow: hidden;
+            perspective: 1000px;
+        }
+
+        /* --- KAR EFEKTİ (Snow) --- */
+        #snow-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Tıklamayı engellemesin */
+            z-index: -1; /* Ağacın arkasında kalsın */
+        }
+
+        .snowflake {
+            position: absolute;
+            top: -10px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            to { transform: translateY(110vh); }
+        }
+
+        /* --- SARMAL AĞAÇ (Sabit) --- */
+        .tree {
+            position: relative;
+            width: 40vmin;
+            height: 60vmin;
+            transform-style: preserve-3d;
+            animation: spin var(--spin-speed) infinite linear;
+            z-index: 10; /* Kar tanelerinin önünde */
+        }
+
+        .light {
+            position: absolute;
+            left: 50%;
+            width: 2vmin;
+            height: 2vmin;
+            border-radius: 50%;
+            bottom: calc(var(--y) * 1%);
+            transform: 
+                translateX(-50%) 
+                rotateY(calc(var(--rotate) * 1deg)) 
+                translateZ(calc(var(--radius) * 1vmin));
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+            opacity: 0.9;
+        }
+
+        .white { background: #ffffff; box-shadow: 0 0 15px #ffffff, 0 0 30px #ffffff; }
+        .red { background: #ff3333; box-shadow: 0 0 15px #ff3333, 0 0 30px #ff0000; }
+
+        .star {
+            position: absolute;
+            top: -9vmin;
+            left: 50%;
+            font-size: 6vmin;
+            color: transparent;
+            -webkit-text-stroke: 1.5px #ffd700;
+            filter: drop-shadow(0 0 6px #ffd700);
+            animation: 
+                counterSpin var(--spin-speed) infinite linear,
+                starPulse 2s infinite alternate;
+        }
+        
+        .star::before { content: "★"; }
+
+        @keyframes spin {
+            0% { transform: rotateY(0deg); }
+            100% { transform: rotateY(360deg); }
+        }
+
+        @keyframes counterSpin {
+            0%   { transform: translateX(-50%) rotateY(0deg); }
+            100% { transform: translateX(-50%) rotateY(-360deg); }
+        }
+
+        @keyframes starPulse {
+            from { opacity: 0.6; }
+            to   { opacity: 1; }
+        }
     </style>
 </head>
+
 <body>
+
+    <div id="splash">
+        <div id="snow-container"></div>
+
+        <audio id="bgMusic" loop>
+            <source src="jingle_bells.mp3" type="audio/mpeg">
+        </audio>
+
+        <div class="tree" id="tree">
+            <div class="star"></div>
+        </div>
+    </div>
 
     <img src="Clasics.JPG" class="menu-image">
     <img src="Latte.JPG" class="menu-image">
@@ -29,6 +148,85 @@
     <img src="Matcha.JPG" class="menu-image">
     <img src="Wuhu Moctails.JPG" class="menu-image">
     <img src="Hot Dirinks.JPG" class="menu-image">
+
+    <script>
+        /* --- Müzik Başlatma --- */
+        // Sayfa yüklendiğinde müziği çalmayı dener
+        // (Tarayıcı izin verirse çalar, vermezse sessiz kalır)
+        const audio = document.getElementById("bgMusic");
+        // Buraya basit bir Jingle Bells linki koydum (Placeholder),
+        // Kendi dosyan varsa yukarıdaki src kısmını değiştir.
+        audio.src = "https://actions.google.com/sounds/v1/holidays/deck_the_halls.ogg"; 
+        
+        window.addEventListener('load', () => {
+            audio.play().catch(error => {
+                console.log("Otomatik oynatma engellendi, etkileşim bekleniyor.");
+            });
+        });
+
+        /* --- Splash Kapanışı --- */
+        setTimeout(() => {
+            const splash = document.getElementById("splash");
+            splash.style.opacity = "0";
+
+            // Splash kapanırken sesi de yavaşça kısalım (Fade-out)
+            let fadeAudio = setInterval(() => {
+                if (audio.volume > 0.1) {
+                    audio.volume -= 0.1;
+                } else {
+                    audio.pause();
+                    clearInterval(fadeAudio);
+                }
+            }, 100);
+
+            setTimeout(() => {
+                splash.style.display = "none";
+            }, 1000);
+        }, 6000); // 6 saniye sonra kapanır
+
+        /* --- AĞAÇ OLUŞTURMA --- */
+        const tree = document.getElementById("tree");
+        let html = "";
+        const count = 60; 
+
+        for (let i = 0; i < count; i++) {
+            const p = i / count;
+            const y = p * 100;
+            const rotate = i * 25; 
+            const radius = (1 - p) * 20;
+            const color = i % 2 === 0 ? 'red' : 'white';
+
+            html += `
+                <div class="light ${color}" 
+                    style="--y: ${y}; --rotate: ${rotate}; --radius: ${radius};">
+                </div>
+            `;
+        }
+        tree.innerHTML += html;
+
+        /* --- KAR YAĞIŞI EFEKTİ --- */
+        const snowContainer = document.getElementById('snow-container');
+        const snowflakeCount = 50; // Kar tanesi sayısı
+
+        for (let i = 0; i < snowflakeCount; i++) {
+            const snowflake = document.createElement('div');
+            snowflake.classList.add('snowflake');
+            
+            // Rastgele özellikler
+            const size = Math.random() * 3 + 2 + 'px'; // 2px ile 5px arası
+            const left = Math.random() * 100 + '%'; // Ekranın herhangi bir yeri
+            const duration = Math.random() * 3 + 2 + 's'; // 2s ile 5s arası düşüş hızı
+            const delay = Math.random() * 5 + 's'; // Başlama gecikmesi
+
+            snowflake.style.width = size;
+            snowflake.style.height = size;
+            snowflake.style.left = left;
+            snowflake.style.animationDuration = duration;
+            snowflake.style.animationDelay = delay;
+
+            snowContainer.appendChild(snowflake);
+        }
+    </script>
 
 </body>
 </html>
