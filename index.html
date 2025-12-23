@@ -195,7 +195,7 @@
             const y = p * 100;
             const rotate = i * 25; 
             const radius = (1 - p) * 20;
-            const color = i % 3 === 0 ? 'red' : 'white' : 'green';
+            const color = i % 2 === 0 ? 'red' : 'white';
 
             html += `
                 <div class="light ${color}" 
