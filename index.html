@@ -148,6 +148,7 @@
     <img src="Matcha.JPG" class="menu-image">
     <img src="Wuhu Moctails.JPG" class="menu-image">
     <img src="Hot Dirinks.JPG" class="menu-image">
+    <img src="Wuhu Kitchen.JPG" class="menu-image">
 
     <script>
         /* --- Müzik Başlatma --- */
@@ -194,7 +195,7 @@
             const y = p * 100;
             const rotate = i * 25; 
             const radius = (1 - p) * 20;
-            const color = i % 2 === 0 ? 'red' : 'white';
+            const color = i % 3 === 0 ? 'red' : 'white' : 'green';
 
             html += `
                 <div class="light ${color}" 
